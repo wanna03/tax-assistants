@@ -4,525 +4,173 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ผู้ช่วยภาษีหัก ณ ที่จ่าย</title>
+<title>เครื่องคำนวณภาษีหัก ณ ที่จ่าย</title>
 <style>
-:root{
- --navy:#17345c;--blue:#2864dc;--bg:#f4f7fb;
- --text:#253247;--muted:#718096;--border:#dfe6ef;
- --green:#16865b;--orange:#a66a08;--red:#bd4141;
-}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);
- font-family:Arial,"Noto Sans Thai",sans-serif;line-height:1.65}
-header{background:var(--navy);color:white;padding:25px 18px}
-.wrap{max-width:950px;margin:auto;padding:18px}
-.brand{font-size:12px;letter-spacing:1.5px;color:#c8d7f1}
-h1{font-size:25px;margin:5px 0}
-header p{color:#dce6f5;margin:5px 0}
-nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
-nav button{background:#ffffff18;color:white;border:1px solid #ffffff50;
- border-radius:8px;padding:9px 13px;cursor:pointer}
-nav button.active{background:white;color:var(--navy)}
-.card{background:white;border:1px solid var(--border);border-radius:13px;
- padding:20px;margin-bottom:16px}
-h2{font-size:19px;color:var(--navy);margin:0 0 14px}
-h3{font-size:16px;margin:18px 0 8px}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.field{margin-bottom:13px}
-label{display:block;font-weight:600;font-size:14px;margin-bottom:5px}
-input,select,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;
- border-radius:8px;background:white;color:var(--text);font-size:15px}
-textarea{resize:vertical}
-input:focus,select:focus,textarea:focus{outline:2px solid #b9d0ff}
-.hint{font-size:12px;color:var(--muted);font-weight:normal}
-.primary{background:var(--blue);color:white;border:0;border-radius:9px;
- padding:13px 18px;font-size:16px;font-weight:600;width:100%;cursor:pointer}
-.secondary{background:#edf2fa;color:var(--navy);border:0;
- border-radius:8px;padding:10px 14px;cursor:pointer}
-.hidden{display:none!important}
-.notice{background:#fff8e8;border-left:4px solid #d49a2b;
- padding:13px;border-radius:7px;margin:12px 0;font-size:14px}
-.success{background:#effaf4;border-left:4px solid var(--green);
- padding:14px;border-radius:7px;margin:12px 0}
-.danger{background:#fff1f1;border-left:4px solid var(--red);
- padding:14px;border-radius:7px;margin:12px 0}
-.result-table{width:100%;border-collapse:collapse;margin-top:12px}
-.result-table td{padding:10px;border-bottom:1px solid var(--border)}
-.result-table td:last-child{text-align:right;font-weight:600}
-.big{font-size:27px;color:var(--navy);font-weight:700}
-.muted{font-size:13px;color:var(--muted)}
-.tag{display:inline-block;padding:3px 9px;border-radius:20px;
- background:#edf2fa;color:var(--navy);font-size:12px}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
-.actions button{flex:1}
-a{color:var(--blue)}
-footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}
-@media(max-width:620px){
- .grid{grid-template-columns:1fr}
- .wrap{padding:12px}
- .card{padding:15px}
- h1{font-size:21px}
-}
+body{margin:0;padding:20px;background:#f3f5f9;color:#263247;font-family:Arial,sans-serif}
+main{max-width:520px;margin:25px auto;background:white;padding:24px;border-radius:16px;box-shadow:0 5px 25px #0001}
+h1{text-align:center;font-size:23px}
+.sub{text-align:center;color:#687386;font-size:14px;margin-bottom:24px}
+label{display:block;font-weight:bold;margin:15px 0 7px}
+input,select{width:100%;padding:13px;border:1px solid #ccd3df;border-radius:8px;font-size:16px;background:white}
+button{width:100%;padding:14px;background:#2457a7;color:white;border:0;border-radius:9px;font-size:17px;margin-top:20px;cursor:pointer}
+.result{display:none;background:#eef5ff;padding:17px;border-radius:10px;margin-top:22px}
+.line{display:flex;justify-content:space-between;gap:12px;margin:13px 0}
+.net{font-size:22px;color:#147448;font-weight:bold}
+.note{font-size:12px;color:#737d8c;line-height:1.6;margin-top:20px}
+.rate{font-size:14px;color:#2457a7;margin-top:10px}
 </style>
 </head>
 <body>
+<main>
+<h1>ผู้ช่วยคำนวณภาษีหัก ณ ที่จ่าย</h1>
+<div class="sub">กรอกข้อมูลรายการจ่าย ระบบคำนวณอัตราภาษีให้อัตโนมัติ</div>
 
-<header>
- <div class="wrap">
-  <div class="brand">WITHHOLDING TAX ASSISTANT</div>
-  <h1>ผู้ช่วยภาษีหัก ณ ที่จ่าย</h1>
-  <p>ตรวจสอบรายการจ่าย วิเคราะห์ภาษี และคำนวณยอดหัก ณ ที่จ่าย</p>
-  <nav>
-   <button class="active" onclick="showPage('entry',this)">เริ่มวิเคราะห์</button>
-   <button onclick="showPage('history',this)">ประวัติรายการ</button>
-   <button onclick="showPage('law',this)">ความรู้และกฎหมาย</button>
-   <button onclick="showPage('about',this)">เกี่ยวกับระบบ</button>
-  </nav>
- </div>
-</header>
+<label>วันที่จ่ายเงินจริง</label>
+<input type="date" id="date">
 
-<main class="wrap">
+<label>ผู้จ่ายเงิน</label>
+<select id="payer">
+<option value="company">บริษัท / ห้างหุ้นส่วนนิติบุคคล</option>
+<option value="person">บุคคลธรรมดา</option>
+</select>
 
-<section id="entry">
- <div class="card">
-  <h2>ข้อมูลการจ่ายเงิน</h2>
-  <p class="muted">กรอกข้อมูลตามธุรกรรมที่เกิดขึ้นจริง ไม่จำเป็นต้องเลือกกรณีตัวอย่าง</p>
+<label>จ่ายเงินให้ใคร</label>
+<select id="recipient">
+<option value="person">บุคคลธรรมดา</option>
+<option value="company">บริษัท / ห้างหุ้นส่วนนิติบุคคล</option>
+<option value="foundation">มูลนิธิ / สมาคม</option>
+<option value="foreign">ผู้รับเงินต่างประเทศ</option>
+</select>
 
-  <div class="grid">
-   <div class="field">
-    <label>วันที่จ่ายเงินจริง *</label>
-    <input type="date" id="payDate">
-   </div>
-   <div class="field">
-    <label>เลขที่เอกสาร / เลขที่ใบแจ้งหนี้</label>
-    <input id="documentNo" placeholder="ระบุเลขที่เอกสาร (ถ้ามี)">
-   </div>
-  </div>
- </div>
+<label>ประเภทรายจ่าย</label>
+<select id="type">
+<option value="">-- เลือกรายการ --</option>
+<option value="rent">ค่าเช่าทรัพย์สิน</option>
+<option value="ad">ค่าโฆษณา</option>
+<option value="service">ค่าบริการทั่วไป</option>
+<option value="contract">ค่าจ้างทำของ / รับเหมา</option>
+<option value="professional">ค่าวิชาชีพอิสระ</option>
+<option value="transport">ค่าขนส่งสินค้า</option>
+<option value="insurance">ค่าเบี้ยประกันวินาศภัย</option>
+<option value="goods">ซื้อสินค้า</option>
+<option value="hotel">ค่าที่พักโรงแรม</option>
+<option value="restaurant">ค่าอาหารภัตตาคาร</option>
+<option value="other">อื่น ๆ</option>
+</select>
 
- <div class="card">
-  <h2>ข้อมูลผู้จ่ายเงิน</h2>
-  <div class="grid">
-   <div class="field">
-    <label>ชื่อผู้จ่ายเงิน *</label>
-    <input id="payerName" placeholder="ชื่อบุคคลหรือชื่อนิติบุคคล">
-   </div>
-   <div class="field">
-    <label>ประเภทผู้จ่ายเงิน *</label>
-    <select id="payerType">
-     <option value="">เลือกประเภท</option>
-     <option value="company">บริษัท / ห้างหุ้นส่วนนิติบุคคล</option>
-     <option value="individual">บุคคลธรรมดา</option>
-     <option value="government">หน่วยงานของรัฐ</option>
-     <option value="other">อื่น ๆ</option>
-    </select>
-   </div>
-   <div class="field">
-    <label>สถานะผู้จ่ายเงิน</label>
-    <select id="payerResidence">
-     <option value="thai">อยู่ในประเทศไทย</option>
-     <option value="foreign">อยู่ต่างประเทศ</option>
-    </select>
-   </div>
-  </div>
- </div>
+<label>จำนวนเงินก่อน VAT (บาท)</label>
+<input type="number" id="amount" min="0" step="0.01" placeholder="เช่น 30000">
 
- <div class="card">
-  <h2>ข้อมูลผู้รับเงิน</h2>
-  <div class="grid">
-   <div class="field">
-    <label>ชื่อผู้รับเงิน *</label>
-    <input id="recipientName" placeholder="ชื่อบุคคลหรือชื่อนิติบุคคล">
-   </div>
-   <div class="field">
-    <label>ประเภทผู้รับเงิน *</label>
-    <select id="recipientType">
-     <option value="">เลือกประเภท</option>
-     <option value="individual">บุคคลธรรมดา</option>
-     <option value="company">บริษัท / ห้างหุ้นส่วนนิติบุคคลไทย</option>
-     <option value="foreign_individual">บุคคลธรรมดาต่างประเทศ</option>
-     <option value="foreign_company">นิติบุคคลต่างประเทศ</option>
-     <option value="government">หน่วยงานของรัฐ</option>
-     <option value="other">อื่น ๆ / ไม่แน่ใจ</option>
-    </select>
-   </div>
-   <div class="field">
-    <label>ถิ่นที่อยู่ทางภาษีของผู้รับเงิน</label>
-    <select id="recipientResidence">
-     <option value="thai">ประเทศไทย</option>
-     <option value="foreign">ต่างประเทศ</option>
-     <option value="unknown">ไม่ทราบ</option>
-    </select>
-   </div>
-  </div>
- </div>
+<label>VAT</label>
+<select id="vat">
+<option value="0">ไม่มี VAT</option>
+<option value="7">มี VAT 7%</option>
+</select>
 
- <div class="card">
-  <h2>รายละเอียดธุรกรรม</h2>
-  <div class="field">
-   <label>อธิบายว่าจ่ายเงินเป็นค่าอะไร *</label>
-   <textarea id="description" rows="4"
-    placeholder="พิมพ์รายละเอียดได้อย่างอิสระ เช่น จ้างบริษัทออกแบบเว็บไซต์และดูแลระบบ จ่ายค่าเช่าอาคาร จ้างซ่อมเครื่องจักร ซื้อวัตถุดิบ จ่ายค่านายหน้า หรือค่าที่ปรึกษา"></textarea>
-   <div class="hint">ไม่จำเป็นต้องใช้คำศัพท์ทางภาษี ขอเพียงอธิบายลักษณะรายการจริงให้ชัดเจน</div>
-  </div>
+<button onclick="calculate()">คำนวณภาษี</button>
 
-  <div class="field">
-   <label>รายละเอียดการทำงาน / สิ่งที่ได้รับ / สิ่งที่ส่งมอบ</label>
-   <textarea id="workDetails" rows="3"
-    placeholder="เช่น ผู้รับเงินต้องทำงานอะไร ส่งมอบอะไร มีการติดตั้งหรือซ่อมแซมหรือไม่"></textarea>
-  </div>
+<div class="result" id="result">
+<h3>ผลการคำนวณ</h3>
+<div class="line"><span>อัตราหัก ณ ที่จ่าย</span><b id="rate"></b></div>
+<div class="line"><span>ฐานคำนวณภาษี</span><b id="base"></b></div>
+<div class="line"><span>ภาษีหัก ณ ที่จ่าย</span><b id="tax"></b></div>
+<div class="line"><span>ภาษีมูลค่าเพิ่ม</span><b id="vatResult"></b></div>
+<hr>
+<div class="line"><span>ยอดเงินสุทธิที่จ่าย</span><span class="net" id="net"></span></div>
+<div class="line"><span>แบบนำส่งภาษี</span><b id="form"></b></div>
+<p id="reason"></p>
+<p class="note" id="law"></p>
+</div>
 
-  <div class="field">
-   <label>รายละเอียดสัญญาและเงื่อนไขการจ่าย</label>
-   <textarea id="contractDetails" rows="3"
-    placeholder="เช่น มีสัญญาจ้างหรือไม่ ใครจัดหาวัสดุ จ่ายครั้งเดียวหรือแบ่งงวด มีการรับประกันผลงานหรือไม่"></textarea>
-  </div>
-
-  <div class="grid">
-   <div class="field">
-    <label>ความสัมพันธ์กับผู้รับเงิน</label>
-    <select id="relationship">
-     <option value="unknown">ไม่แน่ใจ</option>
-     <option value="employee">ลูกจ้าง / พนักงาน</option>
-     <option value="contractor">ผู้รับจ้างอิสระ</option>
-     <option value="vendor">ผู้ขายสินค้า / ผู้ให้บริการ</option>
-     <option value="agent">ตัวแทน / นายหน้า</option>
-     <option value="related">บุคคลหรือกิจการที่เกี่ยวข้องกัน</option>
-     <option value="other">อื่น ๆ</option>
-    </select>
-   </div>
-   <div class="field">
-    <label>ลักษณะการจ่ายเงิน</label>
-    <select id="paymentType">
-     <option value="once">จ่ายครั้งเดียว</option>
-     <option value="installment">จ่ายเป็นงวด</option>
-     <option value="recurring">จ่ายเป็นประจำ</option>
-     <option value="advance">จ่ายเงินล่วงหน้า</option>
-     <option value="deposit">เงินมัดจำ</option>
-     <option value="reimbursement">คืนเงิน / ชดใช้ค่าใช้จ่าย</option>
-    </select>
-   </div>
-  </div>
- </div>
-
- <div class="card">
-  <h2>จำนวนเงินและภาษีมูลค่าเพิ่ม</h2>
-  <div class="grid">
-   <div class="field">
-    <label>จำนวนเงินก่อน VAT (บาท) *</label>
-    <input type="number" id="amount" min="0" step="0.01" placeholder="0.00">
-   </div>
-   <div class="field">
-    <label>อัตรา VAT</label>
-    <select id="vatRate">
-     <option value="0">ไม่มี VAT / ไม่อยู่ในระบบ VAT</option>
-     <option value="7">7%</option>
-     <option value="custom">ระบุยอด VAT เอง</option>
-    </select>
-   </div>
-   <div class="field hidden" id="customVatField">
-    <label>จำนวน VAT (บาท)</label>
-    <input type="number" id="customVat" min="0" step="0.01" value="0">
-   </div>
-   <div class="field">
-    <label>ยอดเงินรวมตามเอกสาร (ถ้ามี)</label>
-    <input type="number" id="invoiceTotal" min="0" step="0.01" placeholder="ไม่จำเป็นต้องกรอก">
-   </div>
-  </div>
-  <div class="notice">
-   หากมีรายการหลายประเภทในใบแจ้งหนี้เดียวกัน ควรแยกกรอกรายการแต่ละประเภท เพื่อไม่ให้คำนวณภาษีรวมกันผิดพลาด
-  </div>
- </div>
-
- <div class="card">
-  <h2>ข้อมูลเพิ่มเติม</h2>
-  <div class="field">
-   <label>มีข้อมูลอื่นที่ต้องการแจ้งหรือไม่?</label>
-   <textarea id="otherDetails" rows="3"
-    placeholder="เช่น ผู้รับเงินจดทะเบียน VAT หรือไม่ มีหนังสือรับรอง มีการหักเงินประกันผลงาน หรือมีเงื่อนไขพิเศษ"></textarea>
-  </div>
-  <button class="primary" onclick="analyze()">ตรวจสอบและวิเคราะห์รายการจ่าย</button>
- </div>
-
- <div id="resultArea"></div>
-</section>
-
-<section id="history" class="hidden">
- <div class="card">
-  <h2>ประวัติการวิเคราะห์</h2>
-  <p class="muted">บันทึกไว้ในเบราว์เซอร์ของอุปกรณ์นี้เท่านั้น</p>
-  <div id="historyContent"></div>
-  <button class="secondary" onclick="clearHistory()">ล้างประวัติ</button>
- </div>
-</section>
-
-<section id="law" class="hidden">
- <div class="card">
-  <h2>ความรู้และกฎหมายภาษี</h2>
-  <p>การพิจารณาภาษีหัก ณ ที่จ่ายต้องพิจารณาจากข้อเท็จจริงและกฎหมายที่ใช้บังคับในวันที่จ่ายเงิน ไม่ใช่ดูจากชื่อรายการเพียงอย่างเดียว</p>
-  <h3>กฎหมายที่ควรตรวจสอบ</h3>
-  <ul>
-   <li>ประมวลรัษฎากร โดยเฉพาะมาตรา 40, 50, 50 ทวิ, 52 และ 70 ตามกรณี</li>
-   <li>คำสั่งกรมสรรพากรที่ ท.ป.4/2528 และฉบับแก้ไขเพิ่มเติม</li>
-   <li>ประกาศและคำสั่งกรมสรรพากรที่เกี่ยวข้องกับประเภทรายได้</li>
-   <li>อนุสัญญาภาษีซ้อน กรณีผู้รับเงินเป็นผู้มีถิ่นที่อยู่ในต่างประเทศ</li>
-   <li>มาตรการภาษีที่มีผลเฉพาะช่วงเวลา</li>
-  </ul>
-  <h3>แหล่งข้อมูลทางการ</h3>
-  <p><a href="https://www.rd.go.th/" target="_blank">กรมสรรพากร</a></p>
-  <p><a href="https://www.krisdika.go.th/" target="_blank">สำนักงานคณะกรรมการกฤษฎีกา</a></p>
-  <div class="notice">เว็บไซต์นี้ยังไม่ได้เชื่อมต่อระบบตรวจสอบกฎหมายฉบับปัจจุบันอัตโนมัติ ผู้ใช้งานต้องตรวจสอบประกาศและฉบับแก้ไขเพิ่มเติมก่อนใช้ผลกับธุรกรรมจริง</div>
- </div>
-</section>
-
-<section id="about" class="hidden">
- <div class="card">
-  <h2>เกี่ยวกับระบบ</h2>
-  <p>Withholding Tax Assistant เป็นเครื่องมือช่วยรวบรวมข้อเท็จจริง จำแนกรายการจ่าย และคำนวณภาษีหัก ณ ที่จ่ายเบื้องต้นด้วยกฎและเงื่อนไขที่กำหนดไว้</p>
-  <p>ระบบนี้ไม่เรียกใช้ AI API และไม่ส่งข้อมูลธุรกรรมไปยัง AI ภายนอก</p>
-  <div class="danger">
-   เวอร์ชันนี้เป็นต้นแบบ Rule-Based ยังไม่ใช่ระบบที่ผ่านการตรวจสอบกฎหมายครบทุกธุรกรรม และไม่ควรใช้เป็นหลักฐานยืนยันหน้าที่ภาษีหรือใช้ยื่นแบบโดยไม่ตรวจสอบกับกฎหมายและผู้เชี่ยวชาญ
-  </div>
- </div>
-</section>
-
+<div class="note">
+ระบบนี้เป็นเครื่องคำนวณต้นแบบสำหรับรายการทั่วไป โดยสมมติว่าผู้จ่ายเป็นผู้มีหน้าที่หักภาษีตามกฎหมาย และผู้รับเงินอยู่ในประเทศไทย
+กรณีที่มีเงื่อนไขพิเศษหรือข้อมูลไม่เพียงพอ ระบบจะแจ้งให้ตรวจสอบเพิ่มเติม
+</div>
 </main>
 
-<footer>
- Withholding Tax Assistant | เครื่องมือช่วยวิเคราะห์ภาษีหัก ณ ที่จ่าย
-</footer>
-
 <script>
-const $ = id => document.getElementById(id);
-
-function localDate(){
- const d=new Date();
- return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
-}
-$("payDate").value=localDate();
-
-$("vatRate").addEventListener("change",()=>{
- $("customVatField").classList.toggle("hidden",$("vatRate").value!=="custom");
-});
-
-function showPage(page,btn){
- ["entry","history","law","about"].forEach(id=>$(id).classList.add("hidden"));
- $(page).classList.remove("hidden");
- document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
- btn.classList.add("active");
- if(page==="history") renderHistory();
-}
+const rules = {
+ rent:{rate:5,law:"คำสั่ง ท.ป.4/2528 ข้อ 6"},
+ ad:{rate:2,law:"คำสั่ง ท.ป.4/2528 ข้อ 10"},
+ service:{rate:3,law:"คำสั่ง ท.ป.4/2528 ข้อ 12/1"},
+ contract:{rate:3,law:"คำสั่ง ท.ป.4/2528 ข้อ 8"},
+ professional:{rate:3,law:"ต้องตรวจสอบลักษณะวิชาชีพและข้อเท็จจริงก่อนยืนยันอัตรา"},
+ transport:{rate:1,law:"คำสั่ง ท.ป.4/2528 ข้อ 12/4"},
+ insurance:{rate:1,law:"คำสั่ง ท.ป.4/2528 ข้อ 12/2"}
+};
 
 function money(n){
- return Number(n).toLocaleString("th-TH",{minimumFractionDigits:2,maximumFractionDigits:2});
+ return n.toLocaleString("th-TH",{minimumFractionDigits:2,maximumFractionDigits:2})+" บาท";
 }
 
-/*
-  กฎเบื้องต้นสำหรับต้นแบบเท่านั้น
-  ต้องตรวจสอบกฎหมาย อัตรา เงื่อนไข และผู้มีหน้าที่หัก
-  ก่อนนำไปใช้จริงทุกกรณี
-*/
-function classify(text){
- const t=text.toLowerCase();
+function calculate(){
+ const date=document.getElementById("date").value;
+ const payer=document.getElementById("payer").value;
+ const recipient=document.getElementById("recipient").value;
+ const type=document.getElementById("type").value;
+ const amount=Number(document.getElementById("amount").value);
+ const vatRate=Number(document.getElementById("vat").value);
+ const result=document.getElementById("result");
 
- if(/ค่าเช่า|เช่าอาคาร|เช่าบ้าน|เช่าที่ดิน|เช่าพื้นที่/.test(t))
-  return {name:"ค่าเช่าทรัพย์สิน",rate:5,section:"มาตรา 40(5)",reference:"ท.ป.4/2528 ข้อ 6",confidence:"เบื้องต้น"};
- if(/โฆษณา|ลงโฆษณา|สื่อโฆษณา|ประชาสัมพันธ์/.test(t))
-  return {name:"ค่าโฆษณา",rate:2,section:"โดยทั่วไปพิจารณามาตรา 40(8)",reference:"ท.ป.4/2528 ข้อ 10",confidence:"เบื้องต้น"};
- if(/ค่าขนส่ง|รับขนสินค้า|ขนส่งสินค้า|ค่ารถขน/.test(t))
-  return {name:"ค่าขนส่ง",rate:1,section:"โดยทั่วไปพิจารณามาตรา 40(8)",reference:"ท.ป.4/2528 ข้อ 12/4",confidence:"เบื้องต้น"};
- if(/ค่าจ้างทำของ|รับเหมา|ผลิตตามสั่ง|ซ่อมแซม|ติดตั้ง|ก่อสร้าง/.test(t))
-  return {name:"ค่าจ้างทำของ / รับเหมา",rate:3,section:"ต้องพิจารณามาตรา 40(7) หรือ 40(8)",reference:"ท.ป.4/2528 ข้อ 8 ตามเงื่อนไข",confidence:"ต้องตรวจสอบข้อเท็จจริง"};
- if(/ค่านายหน้า|นายหน้า|ตัวแทน/.test(t))
-  return {name:"ค่านายหน้า / ตัวแทน",rate:null,section:"ต้องพิจารณาลักษณะเงินได้และความสัมพันธ์",reference:"ต้องตรวจสอบกฎหมายที่เกี่ยวข้อง",confidence:"ต้องตรวจสอบเพิ่มเติม"};
- if(/ค่าที่ปรึกษา|ที่ปรึกษา|วิชาชีพ|ค่าทนาย|ค่าบัญชี|ค่าสอบบัญชี/.test(t))
-  return {name:"ค่าที่ปรึกษา / วิชาชีพ",rate:null,section:"อาจเกี่ยวข้องกับมาตรา 40(6) หรือ 40(8)",reference:"ต้องตรวจสอบลักษณะบริการและสถานะผู้รับ",confidence:"ต้องตรวจสอบเพิ่มเติม"};
- if(/ค่าบริการ|บริการ|ทำความสะอาด|ดูแลระบบ|ออกแบบ|จัดทำเว็บไซต์/.test(t))
-  return {name:"ค่าบริการ",rate:3,section:"โดยทั่วไปพิจารณามาตรา 40(8)",reference:"ท.ป.4/2528 ข้อ 12/1 ตามเงื่อนไข",confidence:"ต้องตรวจสอบประเภทบริการ"};
- if(/ซื้อสินค้า|ซื้อวัตถุดิบ|ซื้ออุปกรณ์|ซื้อของ/.test(t))
-  return {name:"ซื้อสินค้า",rate:0,section:"การซื้อขายสินค้า",reference:"ต้องพิจารณาข้อเท็จจริงและรายการประกอบ",confidence:"ต้องตรวจสอบรายการประกอบ"};
- return {name:"ยังจำแนกไม่ได้",rate:null,section:"ยังไม่สามารถระบุประเภทเงินได้",reference:"ต้องตรวจสอบข้อเท็จจริงและกฎหมาย",confidence:"ต้องสอบถามเพิ่มเติม"};
-}
-
-function analyze(){
- const required=[
-  ["payDate","วันที่จ่ายเงินจริง"],
-  ["payerName","ชื่อผู้จ่ายเงิน"],
-  ["payerType","ประเภทผู้จ่ายเงิน"],
-  ["recipientName","ชื่อผู้รับเงิน"],
-  ["recipientType","ประเภทผู้รับเงิน"],
-  ["description","รายละเอียดรายการจ่าย"],
-  ["amount","จำนวนเงิน"]
- ];
- const missing=required.filter(([id])=>!$(id).value.trim());
- if(missing.length){
-  alert("กรุณากรอกข้อมูลต่อไปนี้:\n"+missing.map(x=>"• "+x[1]).join("\n"));
-  $(missing[0][0]).focus();
+ if(!date || !type || !amount || amount<=0){
+  alert("กรุณากรอกวันที่ เลือกรายการ และจำนวนเงินให้ครบถ้วน");
   return;
  }
 
- const amount=Number($("amount").value);
- if(amount<=0){alert("จำนวนเงินต้องมากกว่า 0");return;}
+ result.style.display="block";
 
- const vatRate=$("vatRate").value;
- const vat=vatRate==="custom"?Number($("customVat").value||0):
-  amount*Number(vatRate)/100;
- const total=amount+vat;
-
- const textInput=$("description").value+" "+
-  $("workDetails").value+" "+$("contractDetails").value;
- const rule=classify(textInput);
-
- let warnings=[];
- let uncertain=false;
-
- if(rule.rate===null) uncertain=true;
- if($("recipientResidence").value!=="thai" ||
-    ["foreign_individual","foreign_company"].includes($("recipientType").value)){
-  uncertain=true;
-  warnings.push("ผู้รับเงินต่างประเทศ: ต้องตรวจสอบมาตรา 70 อนุสัญญาภาษีซ้อน แหล่งเงินได้ และเงื่อนไขการประกอบกิจการในประเทศไทย");
- }
- if($("payerType").value==="individual"){
-  uncertain=true;
-  warnings.push("ต้องตรวจสอบว่าผู้จ่ายเงินมีหน้าที่หักภาษีตามบทบัญญัติที่เกี่ยวข้องหรือไม่");
- }
- if($("recipientType").value==="other"){
-  uncertain=true;
-  warnings.push("ยังไม่ทราบสถานะผู้รับเงินที่ชัดเจน");
- }
- if($("relationship").value==="employee"){
-  uncertain=true;
-  warnings.push("หากเป็นการจ่ายเงินได้จากการจ้างแรงงาน ต้องพิจารณาหลักเกณฑ์ภาษีเงินเดือนและ ภ.ง.ด.1");
- }
- if($("paymentType").value==="reimbursement"){
-  uncertain=true;
-  warnings.push("ต้องตรวจสอบว่าเป็นการคืนเงินทดรองแท้จริงหรือเป็นค่าตอบแทน/รายได้");
- }
- if($("paymentType").value==="deposit"){
-  uncertain=true;
-  warnings.push("ต้องตรวจสอบลักษณะเงินมัดจำ เงื่อนไขการริบ และเวลาที่ถือเป็นการจ่ายเงินได้");
- }
- if(!$("workDetails").value.trim()){
-  uncertain=true;
-  warnings.push("ยังไม่มีรายละเอียดงานหรือสิ่งที่ผู้รับเงินต้องส่งมอบ");
- }
- if(!$("contractDetails").value.trim()){
-  warnings.push("ควรตรวจสอบสัญญาและเงื่อนไขการจ่ายเพื่อยืนยันประเภทเงินได้");
- }
- if(!$("otherDetails").value.trim()){
-  warnings.push("ยังไม่ได้ให้ข้อมูลเพิ่มเติม เช่น สถานะ VAT หรือเงื่อนไขพิเศษ");
- }
- if(rule.confidence!=="เบื้องต้น"){
-  uncertain=true;
-  warnings.push("การจำแนกประเภทรายการยังต้องตรวจสอบข้อเท็จจริงเพิ่มเติม");
+ function stop(message){
+  document.getElementById("rate").textContent="ยังไม่สามารถสรุปได้";
+  document.getElementById("base").textContent="-";
+  document.getElementById("tax").textContent="-";
+  document.getElementById("vatResult").textContent="-";
+  document.getElementById("net").textContent="-";
+  document.getElementById("form").textContent="-";
+  document.getElementById("reason").textContent=message;
+  document.getElementById("law").textContent="ควรตรวจสอบข้อเท็จจริงและกฎหมายที่ใช้บังคับในวันที่จ่ายเงินจริง";
  }
 
- const rate=uncertain?null:rule.rate;
- const wht=rate===null?null:amount*rate/100;
- const net=wht===null?null:total-wht;
-
- let form="ยังไม่สามารถระบุแบบนำส่งได้";
- if(wht!==null && wht>0){
-  form=$("recipientType").value==="individual"?"ภ.ง.ด.3":"ภ.ง.ด.53";
- }
- if(wht===0) form="โดยทั่วไปไม่มีแบบนำส่งจากรายการนี้ หากไม่มีรายการหักภาษีอื่น";
-
- const dateText=new Date($("payDate").value+"T00:00:00")
-  .toLocaleDateString("th-TH",{day:"numeric",month:"long",year:"numeric"});
-
- let html=`<div class="card" id="analysisResult">
- <h2>ผลการวิเคราะห์รายการจ่าย</h2>
- <span class="tag">${uncertain?"ต้องตรวจสอบเพิ่มเติม":"ผลคำนวณเบื้องต้น"}</span>
- <table class="result-table">
- <tr><td>วันที่จ่ายเงินจริง</td><td>${dateText}</td></tr>
- <tr><td>ผู้จ่ายเงิน</td><td>${escapeHTML($("payerName").value)}</td></tr>
- <tr><td>ผู้รับเงิน</td><td>${escapeHTML($("recipientName").value)}</td></tr>
- <tr><td>รายละเอียดรายการ</td><td>${escapeHTML($("description").value)}</td></tr>
- <tr><td>ประเภทเงินได้ที่ระบบประเมิน</td><td>${rule.name}</td></tr>
- <tr><td>จำนวนเงินก่อน VAT</td><td>${money(amount)} บาท</td></tr>
- <tr><td>VAT</td><td>${money(vat)} บาท</td></tr>
- <tr><td>ยอดรวม</td><td>${money(total)} บาท</td></tr>
- <tr><td>อัตราหัก ณ ที่จ่าย</td><td>${rate===null?"ยังไม่สามารถสรุป":rate+"%"}</td></tr>
- <tr><td>ภาษีหัก ณ ที่จ่าย</td><td>${wht===null?"รอตรวจสอบ":money(wht)+" บาท"}</td></tr>
- <tr><td><b>ยอดจ่ายสุทธิ</b></td><td>${net===null?"รอตรวจสอบ":money(net)+" บาท"}</td></tr>
- <tr><td>แบบนำส่งที่อาจเกี่ยวข้อง</td><td>${form}</td></tr>
- </table>`;
-
- if(uncertain){
-  html+=`<div class="danger"><b>ยังไม่ควรนำผลไปใช้จ่ายเงินจริง</b><br>
-  ระบบยังมีข้อเท็จจริงหรือเงื่อนไขทางกฎหมายที่ต้องตรวจสอบก่อนสรุปอัตราภาษี</div>`;
- }else{
-  html+=`<div class="notice"><b>โปรดตรวจสอบก่อนใช้งานจริง</b><br>
-  อัตราที่แสดงเป็นการประเมินตามกฎเบื้องต้น ยังไม่ได้ตรวจสอบประกาศและมาตรการที่มีผลในวันที่จ่ายแบบเรียลไทม์</div>`;
- }
-
- html+=`<h3>เหตุผลและกฎหมายเบื้องต้น</h3>
- <p>${rule.section}</p><p>${rule.reference}</p>
- <p class="muted">การอ้างอิงข้างต้นเป็นแนวทางให้ตรวจสอบ ไม่ใช่การยืนยันว่าบทบัญญัตินั้นใช้กับธุรกรรมนี้ได้ครบถ้วน</p>`;
-
- if(warnings.length){
-  html+=`<h3>ข้อมูลที่ควรตรวจสอบเพิ่มเติม</h3><ul>${warnings.map(x=>"<li>"+escapeHTML(x)+"</li>").join("")}</ul>`;
- }
-
- html+=`<div class="actions">
- <button class="secondary" onclick="window.print()">พิมพ์ผลวิเคราะห์</button>
- <button class="secondary" onclick="copyResult()">คัดลอกผล</button>
- </div></div>`;
-
- $("resultArea").innerHTML=html;
- $("resultArea").scrollIntoView({behavior:"smooth"});
-
- const record={
-  date:$("payDate").value,
-  payer:$("payerName").value,
-  recipient:$("recipientName").value,
-  description:$("description").value,
-  amount:amount,rate:rate,wht:wht,net:net,
-  category:rule.name
- };
- let history=JSON.parse(localStorage.getItem("whtHistory")||"[]");
- history.unshift(record);
- localStorage.setItem("whtHistory",JSON.stringify(history.slice(0,100)));
-}
-
-function escapeHTML(value){
- return String(value).replace(/[&<>"']/g,c=>({
-  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
- }[c]));
-}
-
-function copyResult(){
- const el=$("analysisResult");
- if(!el)return;
- const text=el.innerText;
- if(navigator.clipboard){
-  navigator.clipboard.writeText(text).then(()=>alert("คัดลอกผลแล้ว"));
- }else{
-  alert("อุปกรณ์นี้ไม่รองรับการคัดลอกอัตโนมัติ");
- }
-}
-
-function renderHistory(){
- const history=JSON.parse(localStorage.getItem("whtHistory")||"[]");
- if(!history.length){
-  $("historyContent").innerHTML="<p class='muted'>ยังไม่มีประวัติรายการ</p>";
+ if(payer==="person"){
+  stop("กรณีผู้จ่ายเป็นบุคคลธรรมดา ต้องตรวจสอบหน้าที่หักภาษีตามลักษณะรายการก่อน จึงยังไม่คำนวณอัตโนมัติ");
   return;
  }
- $("historyContent").innerHTML=history.map(x=>`
- <div class="card">
- <b>${escapeHTML(x.category)}</b>
- <p class="muted">${escapeHTML(x.date)} | ${escapeHTML(x.recipient)}</p>
- <p>${escapeHTML(x.description)}</p>
- <p>ยอดก่อน VAT: ${money(x.amount)} บาท</p>
- <p>ภาษีหัก ณ ที่จ่าย: ${x.wht===null?"รอตรวจสอบ":money(x.wht)+" บาท"}</p>
- </div>`).join("");
-}
 
-function clearHistory(){
- if(confirm("ต้องการลบประวัติทั้งหมดหรือไม่?")){
-  localStorage.removeItem("whtHistory");
-  renderHistory();
+ if(recipient==="foreign" || recipient==="foundation"){
+  stop("ผู้รับเงินประเภทนี้มีเงื่อนไขทางภาษีเฉพาะ กรุณาตรวจสอบเพิ่มเติมก่อนกำหนดอัตรา");
+  return;
  }
+
+ if(type==="other" || type==="professional"){
+  stop("รายการนี้ต้องพิจารณารายละเอียดของเงินได้และข้อเท็จจริงเพิ่มเติมก่อนกำหนดอัตรา");
+  return;
+ }
+
+ if(type==="goods" || type==="hotel" || type==="restaurant"){
+  document.getElementById("rate").textContent="โดยทั่วไปไม่หัก";
+  document.getElementById("base").textContent=money(amount);
+  document.getElementById("tax").textContent=money(0);
+  document.getElementById("vatResult").textContent=money(amount*vatRate/100);
+  document.getElementById("net").textContent=money(amount*(1+vatRate/100));
+  document.getElementById("form").textContent="โดยทั่วไปไม่มีการนำส่งจากรายการนี้";
+  document.getElementById("reason").textContent="รายการนี้โดยทั่วไปไม่ต้องหักภาษี ณ ที่จ่าย แต่ต้องตรวจสอบว่าเป็นการซื้อสินค้าหรือบริการตามลักษณะจริง";
+  document.getElementById("law").textContent="อ้างอิงคำชี้แจงกรมสรรพากรเรื่องตัวอย่างการจ่ายเงินที่ไม่ต้องหักภาษี ณ ที่จ่าย";
+  return;
+ }
+
+ const rule=rules[type];
+ const tax=Math.round(amount*rule.rate)/100;
+ const vat=amount*vatRate/100;
+ const net=amount+vat-tax;
+
+ document.getElementById("rate").textContent=rule.rate+"%";
+ document.getElementById("base").textContent=money(amount);
+ document.getElementById("tax").textContent=money(tax);
+ document.getElementById("vatResult").textContent=money(vat);
+ document.getElementById("net").textContent=money(net);
+ document.getElementById("form").textContent=recipient==="person"?"ภ.ง.ด.3":"ภ.ง.ด.53";
+ document.getElementById("reason").textContent="ระบบเลือกอัตราจากประเภทรายจ่ายที่เลือก โดยคำนวณภาษีจากยอดก่อน VAT";
+ document.getElementById("law").textContent=rule.law+" วันที่จ่าย: "+date+" — โปรดตรวจสอบเงื่อนไขและกฎหมายฉบับล่าสุดก่อนใช้ยื่นภาษีจริง";
 }
 </script>
 </body>
