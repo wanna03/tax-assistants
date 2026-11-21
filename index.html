@@ -22,7 +22,7 @@ button{padding:13px 20px;border:0;border-radius:8px;font-size:16px;font-weight:b
 .secondary{background:#e5edf4;color:#173b5e}
 .actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
 .hidden{display:none}
-.notice{background:#fff4dc;padding:12px;border-radius:8px;font-size:13px}
+.notice{background:#fff4dc;padding:12px;border-radius:8px;font-size:13px;line-height:1.6}
 .result{border-top:4px solid #245b85}
 .line{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #eee}
 .line strong{text-align:right}
@@ -32,23 +32,32 @@ button{padding:13px 20px;border:0;border-radius:8px;font-size:16px;font-weight:b
 .ok{background:#e5f5eb;color:#176b45}
 small{color:#667788}
 a{color:#245b85}
-@media(max-width:600px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+.vat-help{font-size:12px;color:#667788;line-height:1.5}
+@media(max-width:600px){
+ .grid{grid-template-columns:1fr}
+ .full{grid-column:auto}
+ .line{font-size:14px}
+}
 </style>
 </head>
 <body>
+
 <header>
 <h1>AI ผู้ช่วยวิเคราะห์ภาษีหัก ณ ที่จ่าย</h1>
 <p>ระบบคำนวณและจำแนกประเภทรายการจ่ายเงิน</p>
 </header>
 
 <main>
+
 <div class="notice">
+<strong>หมายเหตุ:</strong>
 ระบบต้นแบบใช้กฎภาษีที่กำหนดไว้ ไม่เชื่อมต่อฐานข้อมูลกรมสรรพากรแบบเรียลไทม์
-กรณีที่มีข้อยกเว้นหรือข้อมูลไม่เพียงพอ ระบบจะแจ้งให้ตรวจสอบเพิ่มเติม
+กรณีมีข้อยกเว้นหรือข้อมูลไม่เพียงพอ ระบบจะแจ้งให้ตรวจสอบเพิ่มเติม
 </div>
 
 <section class="card">
 <h2>1. ข้อมูลการจ่ายเงิน</h2>
+
 <div class="grid">
 
 <div class="field">
@@ -61,13 +70,16 @@ a{color:#245b85}
 <input type="number" id="amount" min="0" step="0.01" placeholder="กรอกจำนวนเงิน">
 </div>
 
-<div class="field">
-<label>สถานะ VAT</label>
+<div class="field full">
+<label>สถานะ VAT ของจำนวนเงินที่กรอก</label>
 <select id="vat">
-<option value="inclusive">ยอดรวม VAT 7% แล้ว</option>
-<option value="exclusive">ยอดยังไม่รวม VAT 7%</option>
-<option value="none">ไม่มี VAT / ยกเว้น VAT</option>
+<option value="inclusive">ราคานี้รวม VAT 7% แล้ว</option>
+<option value="exclusive">ราคานี้ยังไม่รวม VAT 7%</option>
+<option value="none">ไม่มี VAT / ได้รับยกเว้น VAT</option>
 </select>
+<div class="vat-help">
+เลือกตามลักษณะยอดเงินที่กรอก ระบบจะคำนวณยอดก่อน VAT และ VAT ให้อัตโนมัติ
+</div>
 </div>
 
 <div class="field">
@@ -186,6 +198,7 @@ a{color:#245b85}
 <label>รายละเอียดเพิ่มเติม</label>
 <textarea id="details" rows="2" placeholder="ระบุรายละเอียดเพิ่มเติม (ถ้ามี)"></textarea>
 </div>
+
 </div>
 
 <div class="actions">
@@ -210,186 +223,410 @@ a{color:#245b85}
 <li><a href="https://www.rd.go.th/" target="_blank">กรมสรรพากร</a></li>
 </ul>
 </section>
+
 </main>
 
 <script>
-const $=id=>document.getElementById(id);
-const money=n=>Number(n||0).toLocaleString("th-TH",{minimumFractionDigits:2,maximumFractionDigits:2});
+const $ = id => document.getElementById(id);
 
-function localDate(){
- const d=new Date();
- return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
-}
-$("date").value=localDate();
-
-$("category").addEventListener("change",()=>{
- const c=$("category").value;
- $("professionBox").classList.toggle("hidden",c!=="professional");
- $("rentBox").classList.toggle("hidden",c!=="rent");
- const t=["domesticfreight","passenger","internationalfreight","forwarder","handling"].includes(c);
- ["transportBox","routeBox","carrierBox","chargeBox"].forEach(id=>$(id).classList.toggle("hidden",!t));
+const money = n => Number(n || 0).toLocaleString("th-TH", {
+ minimumFractionDigits:2,
+ maximumFractionDigits:2
 });
 
-function calculate(){
- const amount=Number($("amount").value);
- const category=$("category").value;
- const date=$("date").value;
- const payer=$("payer").value;
- const recipient=$("recipient").value;
- const contract=Number($("contract").value||0);
+function localDate(){
+ const d = new Date();
+ return new Date(d.getTime() - d.getTimezoneOffset()*60000)
+ .toISOString().slice(0,10);
+}
 
- if(!date||!amount||amount<=0||!category){
+$("date").value = localDate();
+
+$("category").addEventListener("change",()=>{
+ const c = $("category").value;
+
+ $("professionBox").classList.toggle("hidden",c !== "professional");
+ $("rentBox").classList.toggle("hidden",c !== "rent");
+
+ const t = [
+  "domesticfreight",
+  "passenger",
+  "internationalfreight",
+  "forwarder",
+  "handling"
+ ].includes(c);
+
+ ["transportBox","routeBox","carrierBox","chargeBox"]
+ .forEach(id => $(id).classList.toggle("hidden",!t));
+});
+
+/* คำนวณ VAT จากสถานะของยอดเงินที่ผู้ใช้กรอก */
+function calculateVAT(amount,vatMode){
+
+ let base = 0;
+ let vatAmount = 0;
+ let gross = 0;
+
+ if(vatMode === "inclusive"){
+  // ยอดที่กรอกเป็นยอดรวม VAT แล้ว
+  gross = amount;
+  base = amount / 1.07;
+  vatAmount = gross - base;
+
+ }else if(vatMode === "exclusive"){
+  // ยอดที่กรอกยังไม่รวม VAT
+  base = amount;
+  vatAmount = base * 0.07;
+  gross = base + vatAmount;
+
+ }else{
+  // ไม่มี VAT หรือได้รับยกเว้น VAT
+  base = amount;
+  vatAmount = 0;
+  gross = amount;
+ }
+
+ return {
+  base:base,
+  vat:vatAmount,
+  gross:gross
+ };
+}
+
+function calculate(){
+
+ const amount = Number($("amount").value);
+ const category = $("category").value;
+ const date = $("date").value;
+ const payer = $("payer").value;
+ const recipient = $("recipient").value;
+ const contract = Number($("contract").value || 0);
+ const vatMode = $("vat").value;
+
+ if(!date || !amount || amount <= 0 || !category){
   alert("กรุณากรอกวันที่ จำนวนเงิน และประเภทการจ่ายให้ครบ");
   return;
  }
 
- // VAT: แยกยอดก่อน VAT หรือบวก VAT ตามตัวเลือก
- let base=amount,vat=0,gross=amount;
- if($("vat").value==="inclusive"){
-  base=amount/1.07;
-  vat=amount-base;
- }else if($("vat").value==="exclusive"){
-  base=amount;
-  vat=base*0.07;
-  gross=base+vat;
- }
+ // คำนวณ VAT ตามตัวเลือกของผู้ใช้
+ const vatResult = calculateVAT(amount,vatMode);
 
- let rate=null,review=false,noTax=false;
- let reason="",law="",form="ต้องตรวจสอบประเภทแบบก่อนยื่น";
+ const base = vatResult.base;
+ const vat = vatResult.vat;
+ const gross = vatResult.gross;
 
- const domesticPayer=["company","government"].includes(payer);
- const thaiRecipient=["individual","company"].includes(recipient);
+ let rate = null;
+ let review = false;
+ let noTax = false;
+
+ let reason = "";
+ let law = "";
+ let form = "ต้องตรวจสอบประเภทแบบก่อนยื่น";
+
+ const domesticPayer = ["company","government"].includes(payer);
 
  function tax(r,msg,legal){
-  rate=r;reason=msg;law=legal;
-  form=recipient==="individual"?"ภ.ง.ด.3":"ภ.ง.ด.53";
- }
- function exempt(msg){
-  noTax=true;rate=0;reason=msg;
- }
- function check(msg,legal=""){
-  review=true;reason=msg;law=legal;
+  rate = r;
+  reason = msg;
+  law = legal;
+  form = recipient === "individual" ? "ภ.ง.ด.3" : "ภ.ง.ด.53";
  }
 
- if(recipient==="foreign"){
-  check("ผู้รับเงินต่างประเทศ ต้องตรวจสอบมาตรา 70 แหล่งเงินได้ และอนุสัญญาภาษีซ้อนก่อนกำหนดอัตรา","ประมวลรัษฎากร มาตรา 70");
+ function exempt(msg){
+  noTax = true;
+  rate = 0;
+  reason = msg;
+ }
+
+ function check(msg,legal=""){
+  review = true;
+  reason = msg;
+  law = legal;
+ }
+
+ if(recipient === "foreign"){
+
+  check(
+   "ผู้รับเงินต่างประเทศ ต้องตรวจสอบมาตรา 70 แหล่งเงินได้ และอนุสัญญาภาษีซ้อนก่อนกำหนดอัตรา",
+   "ประมวลรัษฎากร มาตรา 70"
+  );
+
+  form = "ต้องตรวจสอบ ภ.ง.ด.54 และหน้าที่อื่นที่เกี่ยวข้อง";
+
  }else if(!domesticPayer){
+
   check("ต้องตรวจสอบหน้าที่หักภาษีของผู้จ่ายเงินตามประเภทเงินได้");
+
  }else{
+
   switch(category){
+
    case "salary":
-    check("เงินเดือนต้องคำนวณตามมาตรา 50(1) โดยใช้เงินได้ทั้งปี ภาษีสะสม และค่าลดหย่อน ไม่สามารถใช้อัตราคงที่จากยอดจ่ายครั้งเดียว","มาตรา 50(1) แบบ ภ.ง.ด.1");
-    form="ภ.ง.ด.1";
+    check(
+     "เงินเดือนต้องคำนวณตามมาตรา 50(1) โดยใช้เงินได้ทั้งปี ภาษีสะสม และค่าลดหย่อน ไม่สามารถใช้อัตราคงที่จากยอดจ่ายครั้งเดียว",
+     "มาตรา 50(1) แบบ ภ.ง.ด.1"
+    );
+    form = "ภ.ง.ด.1";
     break;
+
    case "service":
    case "contractwork":
    case "commission":
-    tax(3,"รายการค่าบริการ / ค่าจ้างทำของ / ค่านายหน้าที่เข้าเงื่อนไขทั่วไป อัตรา 3%","คำสั่ง ท.ป.4/2528");
+    tax(
+     3,
+     "รายการค่าบริการ / ค่าจ้างทำของ / ค่านายหน้าที่เข้าเงื่อนไขทั่วไป อัตรา 3%",
+     "คำสั่ง ท.ป.4/2528"
+    );
     break;
+
    case "advertising":
-    tax(2,"ค่าโฆษณาในกรณีทั่วไป อัตรา 2%","คำสั่ง ท.ป.4/2528");
+    tax(
+     2,
+     "ค่าโฆษณาในกรณีทั่วไป อัตรา 2%",
+     "คำสั่ง ท.ป.4/2528"
+    );
     break;
+
    case "professional":
-    if(!$("profession").value)check("กรุณาเลือกสาขาวิชาชีพอิสระ");
-    else tax(3,"ค่าวิชาชีพอิสระตามมาตรา 40(6) ในกรณีทั่วไป อัตรา 3%","ประมวลรัษฎากร มาตรา 40(6) และคำสั่ง ท.ป.4/2528");
+    if(!$("profession").value){
+     check("กรุณาเลือกสาขาวิชาชีพอิสระ");
+    }else{
+     tax(
+      3,
+      "ค่าวิชาชีพอิสระตามมาตรา 40(6) ในกรณีทั่วไป อัตรา 3%",
+      "ประมวลรัษฎากร มาตรา 40(6) และคำสั่ง ท.ป.4/2528"
+     );
+    }
     break;
+
    case "rent":
-    tax(5,"ค่าเช่าทรัพย์สินในกรณีทั่วไป อัตรา 5%","มาตรา 40(5) และคำสั่ง ท.ป.4/2528");
+    tax(
+     5,
+     "ค่าเช่าทรัพย์สินในกรณีทั่วไป อัตรา 5%",
+     "มาตรา 40(5) และคำสั่ง ท.ป.4/2528"
+    );
     break;
+
    case "insurance":
-    tax(1,"ค่าเบี้ยประกันวินาศภัยในกรณีที่เข้าเงื่อนไข อัตรา 1%","คำสั่ง ท.ป.4/2528");
+    tax(
+     1,
+     "ค่าเบี้ยประกันวินาศภัยในกรณีที่เข้าเงื่อนไข อัตรา 1%",
+     "คำสั่ง ท.ป.4/2528"
+    );
     break;
+
    case "goods":
-    exempt("การซื้อขายสินค้าโดยทั่วไปไม่ต้องหักภาษี ณ ที่จ่าย หากมีค่าบริการหรือค่าขนส่งแยกต่างหากต้องจำแนกส่วนนั้น");
+    exempt(
+     "การซื้อขายสินค้าโดยทั่วไปไม่ต้องหักภาษี ณ ที่จ่าย หากมีค่าบริการหรือค่าขนส่งแยกต่างหากต้องจำแนกส่วนนั้น"
+    );
     break;
+
    case "fish":
-    check("การซื้อสัตว์น้ำและผลิตผลบางชนิดมีหลักเกณฑ์เฉพาะ ต้องตรวจสอบชนิดสินค้าและผู้ขายก่อนกำหนดอัตรา");
+    check(
+     "การซื้อสัตว์น้ำและผลิตผลบางชนิดมีหลักเกณฑ์เฉพาะ ต้องตรวจสอบชนิดสินค้าและผู้ขายก่อนกำหนดอัตรา"
+    );
     break;
+
    case "dividend":
-    if(recipient==="individual")tax(10,"เงินปันผลจ่ายแก่บุคคลธรรมดาในกรณีทั่วไป อัตรา 10%","ประมวลรัษฎากร มาตรา 50(2)");
-    else check("เงินปันผลแก่บริษัทต้องตรวจสอบสิทธิยกเว้นและเงื่อนไขผู้รับเงิน");
+    if(recipient === "individual"){
+     tax(
+      10,
+      "เงินปันผลจ่ายแก่บุคคลธรรมดาในกรณีทั่วไป อัตรา 10%",
+      "ประมวลรัษฎากร มาตรา 50(2)"
+     );
+    }else{
+     check("เงินปันผลแก่บริษัทต้องตรวจสอบสิทธิยกเว้นและเงื่อนไขผู้รับเงิน");
+    }
     break;
+
    case "royalty":
     check("ค่าสิทธิและค่าลิขสิทธิ์ต้องจำแนกประเภทสิทธิและลักษณะผู้รับเงินก่อนกำหนดอัตรา");
     break;
+
    case "interest":
     check("ดอกเบี้ยมีอัตราแตกต่างตามประเภทผู้รับเงินและเงื่อนไขกฎหมาย");
     break;
+
    case "prize":
     check("รางวัลและการชิงโชคต้องจำแนกประเภทเงินรางวัลและผู้รับเงิน");
     break;
+
    case "performer":
     check("ค่าตอบแทนนักแสดงสาธารณะมีหลักเกณฑ์เฉพาะ ต้องตรวจสอบลักษณะการแสดงและผู้รับเงิน");
     break;
+
    case "passenger":
     check("ต้องตรวจสอบว่าเป็นค่าโดยสารขนส่งสาธารณะ รถรับจ้าง รถเช่า หรือบริการประเภทอื่น");
     break;
+
    case "domesticfreight":
-    if(contract>=1000){
-     tax(1,"ค่าขนส่งสินค้าในประเทศที่เข้าเงื่อนไข โดยมูลค่าตามสัญญาตั้งแต่ 1,000 บาทขึ้นไป","คำสั่ง ท.ป.4/2528 ข้อ 12/4 และ 12/7");
-    }else check("ต้องตรวจสอบมูลค่าตามสัญญา หลักเกณฑ์ค่าขนส่งกำหนดเกณฑ์สัญญาตั้งแต่ 1,000 บาท แม้แบ่งจ่ายเป็นงวด","คำสั่ง ท.ป.4/2528 ข้อ 12/4 และ 12/7");
+    if(contract >= 1000){
+     tax(
+      1,
+      "ค่าขนส่งสินค้าในประเทศที่เข้าเงื่อนไข โดยมูลค่าตามสัญญาตั้งแต่ 1,000 บาทขึ้นไป",
+      "คำสั่ง ท.ป.4/2528 ข้อ 12/4 และ 12/7"
+     );
+    }else{
+     check(
+      "ต้องตรวจสอบมูลค่าตามสัญญา หลักเกณฑ์ค่าขนส่งกำหนดเกณฑ์สัญญาตั้งแต่ 1,000 บาท แม้แบ่งจ่ายเป็นงวด",
+      "คำสั่ง ท.ป.4/2528 ข้อ 12/4 และ 12/7"
+     );
+    }
     break;
+
    case "internationalfreight":
    case "forwarder":
    case "handling":
-    if($("route").value==="domestic"&&$("charge").value==="handling"){
-     tax(3,"ค่า Handling ที่แยกเรียกเก็บอาจเข้าลักษณะค่าบริการ อัตราทั่วไป 3% ต้องตรวจสอบลักษณะบริการจริง","คำสั่ง ท.ป.4/2528");
-    }else if($("route").value==="outbound"&&$("transport").value==="sea"){
-     check("ค่าระวางเรือส่งออกต้องตรวจสอบผู้ให้บริการและเอกสาร B/L หรือ House B/L รวมถึงข้อยกเว้นเฉพาะ","คำสั่ง ป.110/2545 และ ท.ป.101/2544");
-    }else if($("route").value==="inbound"&&$("transport").value==="sea"){
-     check("ค่าระวางเรือนำเข้ามีผลต่างกันตามสายเรือไทย สายเรือต่างประเทศ และ Forwarder รวมถึงค่า Handling แยกต่างหาก","คำสั่ง ป.110/2545");
-    }else if($("transport").value==="air"){
-     check("ค่าขนส่งสินค้าทางอากาศระหว่างประเทศต้องพิจารณาว่าใครจ่ายให้ใครและมีค่าคอมมิชชันหรือไม่ ห้ามใช้อัตราขนส่งในประเทศโดยอัตโนมัติ","ข้อหารือ กค 0811/7275");
+
+    if($("route").value === "domestic" && $("charge").value === "handling"){
+
+     tax(
+      3,
+      "ค่า Handling ที่แยกเรียกเก็บอาจเข้าลักษณะค่าบริการ อัตราทั่วไป 3% ต้องตรวจสอบลักษณะบริการจริง",
+      "คำสั่ง ท.ป.4/2528"
+     );
+
+    }else if($("route").value === "outbound" && $("transport").value === "sea"){
+
+     check(
+      "ค่าระวางเรือส่งออกต้องตรวจสอบผู้ให้บริการและเอกสาร B/L หรือ House B/L รวมถึงข้อยกเว้นเฉพาะ",
+      "คำสั่ง ป.110/2545 และ ท.ป.101/2544"
+     );
+
+    }else if($("route").value === "inbound" && $("transport").value === "sea"){
+
+     check(
+      "ค่าระวางเรือนำเข้ามีผลต่างกันตามสายเรือไทย สายเรือต่างประเทศ และ Forwarder รวมถึงค่า Handling แยกต่างหาก",
+      "คำสั่ง ป.110/2545"
+     );
+
+    }else if($("transport").value === "air"){
+
+     check(
+      "ค่าขนส่งสินค้าทางอากาศระหว่างประเทศต้องพิจารณาว่าใครจ่ายให้ใครและมีค่าคอมมิชชันหรือไม่ ห้ามใช้อัตราขนส่งในประเทศโดยอัตโนมัติ",
+      "ข้อหารือ กค 0811/7275"
+     );
+
     }else{
-     check("ค่าขนส่งระหว่างประเทศต้องตรวจสอบทิศทางขนส่ง ผู้ให้บริการ เอกสาร และอนุสัญญาภาษีซ้อน");
+
+     check(
+      "ค่าขนส่งระหว่างประเทศต้องตรวจสอบทิศทางขนส่ง ผู้ให้บริการ เอกสาร และอนุสัญญาภาษีซ้อน"
+     );
+
     }
     break;
+
    default:
     check("ยังไม่มีหลักเกณฑ์เพียงพอสำหรับคำนวณรายการนี้");
   }
  }
 
- const taxAmount=(!review&&!noTax&&rate!==null)?base*rate/100:0;
- const net=gross-taxAmount;
+ // คำนวณภาษีจากมูลค่าก่อน VAT
+ // เฉพาะกรณีที่ระบบสามารถยืนยันอัตราได้
+ const taxAmount = (!review && !noTax && rate !== null)
+  ? base * rate / 100
+  : 0;
+
+ // ยอดจ่ายจริง = ยอดรวม VAT - ภาษีหัก ณ ที่จ่าย
+ const net = gross - taxAmount;
 
  $("result").classList.remove("hidden");
- $("status").innerHTML=review
-  ?'<span class="status warn">ต้องตรวจสอบเพิ่มเติม</span>'
-  :'<span class="status ok">'+(noTax?"โดยทั่วไปไม่ต้องหัก":"คำนวณตามหลักทั่วไป")+'</span>';
 
- let html="";
+ $("status").innerHTML = review
+  ? '<span class="status warn">ต้องตรวจสอบเพิ่มเติม</span>'
+  : '<span class="status ok">'+
+    (noTax ? "โดยทั่วไปไม่ต้องหัก" : "คำนวณตามหลักทั่วไป")+
+    '</span>';
+
+ let html = "";
+
  function row(label,value,cls=""){
-  html+=`<div class="line"><span>${label}</span><strong class="${cls}">${value}</strong></div>`;
+  html += `
+   <div class="line">
+    <span>${label}</span>
+    <strong class="${cls}">${value}</strong>
+   </div>
+  `;
  }
- row("วันที่จ่าย",new Date(date+"T00:00:00").toLocaleDateString("th-TH"));
- row("ยอดที่กรอก",money(amount)+" บาท");
+
+ row(
+  "วันที่จ่าย",
+  new Date(date+"T00:00:00").toLocaleDateString("th-TH")
+ );
+
+ row("ยอดเงินที่กรอก",money(amount)+" บาท");
+
+ row("สถานะ VAT",
+  vatMode === "inclusive"
+   ? "รวม VAT แล้ว"
+   : vatMode === "exclusive"
+    ? "ยังไม่รวม VAT"
+    : "ไม่มี VAT / ยกเว้น VAT"
+ );
+
  row("มูลค่าก่อน VAT",money(base)+" บาท");
  row("VAT 7%",money(vat)+" บาท");
  row("ยอดรวม VAT",money(gross)+" บาท");
- row("อัตราหัก ณ ที่จ่าย",review?"รอตรวจสอบ":rate+"%");
+
+ row(
+  "ฐานเงินที่ใช้คำนวณหัก ณ ที่จ่าย",
+  money(base)+" บาท"
+ );
+
+ row(
+  "อัตราหัก ณ ที่จ่าย",
+  review ? "รอตรวจสอบ" : rate+"%"
+ );
+
  row("ภาษีหัก ณ ที่จ่าย",money(taxAmount)+" บาท");
+
  row("ยอดจ่ายสุทธิ",money(net)+" บาท","total");
+
  row("แบบภาษี",form);
 
- $("output").innerHTML=html;
- $("reason").innerHTML=`
- <h3>เหตุผลการวิเคราะห์</h3>
- <p>${reason}</p>
- <p><b>กฎหมายอ้างอิง:</b> ${law||"ตรวจสอบประมวลรัษฎากรและคำสั่งกรมสรรพากรที่มีผลในวันที่จ่าย"}</p>
- ${review?'<div class="notice">ตัวเลขภาษีแสดงเป็น 0.00 บาทชั่วคราวเพราะยังไม่สามารถยืนยันอัตราได้ ไม่ได้หมายความว่าได้รับยกเว้นภาษี</div>':""}
+ $("output").innerHTML = html;
+
+ $("reason").innerHTML = `
+  <h3>เหตุผลการวิเคราะห์</h3>
+  <p>${reason}</p>
+  <p><b>กฎหมายอ้างอิง:</b>
+  ${law || "ตรวจสอบประมวลรัษฎากรและคำสั่งกรมสรรพากรที่มีผลในวันที่จ่าย"}
+  </p>
+  ${
+   review
+   ? '<div class="notice">ตัวเลขภาษีแสดงเป็น 0.00 บาทชั่วคราวเพราะยังไม่สามารถยืนยันอัตราได้ ไม่ได้หมายความว่าได้รับยกเว้นภาษี</div>'
+   : ''
+  }
+  <div class="notice">
+   <b>ข้อควรระวัง:</b>
+   ผลคำนวณนี้เป็นการประมวลผลตามกฎเบื้องต้น
+   ต้องตรวจสอบเงื่อนไขทางกฎหมายและข้อยกเว้นก่อนนำไปใช้ยื่นภาษีจริง
+  </div>
  `;
+
  $("result").scrollIntoView({behavior:"smooth"});
 }
 
 function resetForm(){
- document.querySelectorAll("input,textarea").forEach(x=>x.value="");
- $("date").value=localDate();
- document.querySelectorAll("select").forEach(x=>x.selectedIndex=0);
+
+ document.querySelectorAll("input,textarea").forEach(x=>{
+  x.value = "";
+ });
+
+ $("date").value = localDate();
+
+ document.querySelectorAll("select").forEach(x=>{
+  x.selectedIndex = 0;
+ });
+
  $("result").classList.add("hidden");
  $("professionBox").classList.add("hidden");
  $("rentBox").classList.add("hidden");
- ["transportBox","routeBox","carrierBox","chargeBox"].forEach(id=>$(id).classList.add("hidden"));
+
+ ["transportBox","routeBox","carrierBox","chargeBox"]
+ .forEach(id=>$(id).classList.add("hidden"));
 }
 </script>
+
 </body>
 </html>
